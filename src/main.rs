@@ -1,7 +1,10 @@
+extern crate variant_count;
+
 use std::fmt::{Display, Formatter};
 use std::io::stdin;
+use variant_count::VariantCount;
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, VariantCount)]
 enum Dish {
     ThaiChicken,
     Tofu,
@@ -19,37 +22,50 @@ impl Dish {
 }
 
 const TAKEAWAY_FEE: u32 = 1;
+const MENU_SIZE: usize = Dish::VARIANT_COUNT; // In case we change the menu.
 
 #[derive(Debug, Clone)]
-struct Order; // TODO
+struct Order {
+    dish_count: [u32; MENU_SIZE],
+    dish_count_total: u32,
+    price_total: u32,
+    is_takeaway: bool,
+}
 
 impl Order {
     fn new() -> Order {
-        todo!()
+        Order {
+            dish_count: [0; MENU_SIZE],
+            dish_count_total: 0,
+            price_total: 0,
+            is_takeaway: false,
+        }
     }
 
     fn add_dish(&mut self, dish: Dish) {
-        todo!()
+        self.dish_count[dish as usize] += 1;
+        self.dish_count_total += 1;
+        self.price_total += dish.price();
     }
 
     fn set_takeaway(&mut self) {
-        todo!()
+        self.is_takeaway = true;
     }
 
     fn dish_count(&self, dish: Dish) -> u32 {
-        todo!()
+        self.dish_count[dish as usize]
     }
 
     fn items_count(&self) -> u32 {
-        todo!()
+        self.dish_count_total
     }
 
     fn is_takeaway(&self) -> bool {
-        todo!()
+        self.is_takeaway
     }
 
     fn total(&self) -> u32 {
-        let sum = todo!();
+        let sum = self.price_total;
 
         if self.is_takeaway() {
             sum + self.items_count() * TAKEAWAY_FEE
@@ -63,7 +79,7 @@ impl Display for Order {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "chicken: {}, tofu: {}, rice: {}, takeaway: {}",
+            "chicken: {}, tofu: {}, rice: {}, takeway: {}",
             self.dish_count(Dish::ThaiChicken),
             self.dish_count(Dish::Tofu),
             self.dish_count(Dish::FriedRice),
@@ -84,11 +100,17 @@ struct VanBinh {
 
 impl VanBinh {
     pub fn new() -> VanBinh {
-        todo!()
+        VanBinh {
+            orders_count: 1,
+            customers: Vec::new(),
+        }
     }
 
     fn add_customer(&mut self, name: String, favorite_order: Order) {
-        todo!()
+        self.customers.push(Customer {
+            name,
+            favorite_order,
+        });
     }
 
     fn get_saved_customer(&self, name: &str) -> Option<&Customer> {
@@ -96,11 +118,11 @@ impl VanBinh {
     }
 
     fn increase_orders_count(&mut self) {
-        todo!()
+        self.orders_count += 1;
     }
 
     fn get_orders_count(&self) -> u32 {
-        todo!()
+        self.orders_count
     }
 }
 
@@ -155,7 +177,7 @@ fn main() {
         let order = if let Some(customer) = van_binh.get_saved_customer(&name) {
             println!("Welcome back, {}!", customer.name);
             if yes_no("Same as usual?") {
-                todo!() // use customer's favorite order
+                customer.favorite_order.clone()
             } else {
                 get_order()
             }
@@ -163,13 +185,15 @@ fn main() {
             println!("Welcome, {}!", name);
             let order = get_order();
             if yes_no("Would you like to save this order?") {
-                todo!() // save customer's favorite order in van_binh struct
+                van_binh.add_customer(name, order.clone());
             }
             order
         };
 
-        todo!(); // Check if the order is empty
-        println!("Your order is empty!");
+        if order.items_count() == 0 {
+            println!("Your order is empty!");
+            continue;
+        }
 
         println!("This is order no. {}", van_binh.get_orders_count());
         println!(
