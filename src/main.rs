@@ -107,7 +107,10 @@ impl VanBinh {
     }
 
     fn add_customer(&mut self, name: String, favorite_order: Order) {
-        self.customers.push(Customer {name, favorite_order});
+        self.customers.push(Customer {
+            name,
+            favorite_order,
+        });
     }
 
     fn get_saved_customer(&self, name: &str) -> Option<&Customer> {
